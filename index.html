@@ -2,42 +2,48 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Simulador de Valencias Ecológicas: Pinus vs Polylepis</title>
+    <title>Simulador de Valencias Ecológicas: Colapso de Curva</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f4; padding: 20px; }
         .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        canvas { background: #fafafa; border-bottom: 2px solid #555; border-left: 2px solid #555; display: block; margin: 20px auto; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        canvas { background: #fafafa; border-bottom: 2px solid #555; border-left: 2px solid #555; display: block; margin: 10px auto; }
+        .alert-box { color: #c62828; font-weight: bold; text-align: center; height: 25px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Simulador Didáctico: Valencia Ecológica</h1>
+    <h1>Simulador Didáctico: Valencias Ecológicas y Colapso</h1>
+    
     <div class="grid">
         <div>
-            <label><b>Seleccionar Factor por Grupo:</b></label>
-            <select id="factorSelect" onchange="dibujar()">
-                <option value="Altitud (msnm)">G1: Gradiente Altitudinal</option>
-                <option value="Precipitación (mm)">G2: Estrés Hídrico</option>
-                <option value="Nutrientes (N-P-K)">G3: Fertilidad del Suelo</option>
-                <option value="Luz (W/m²)">G4: Intensidad Lumínica</option>
-                <option value="Temperatura (°C)">G5: Rango Térmico</option>
-                <option value="Salinidad (dS/m)">G6: Salinidad</option>
+            <label><b>Seleccionar Factor (Grupo):</b></label><br>
+            <select id="factorSelect" onchange="dibujar()" style="width:100%; padding:8px; margin-top:5px;">
+                <option value="Gradiente Altitudinal / Temperatura">G1: Gradiente Altitudinal</option>
+                <option value="Precipitación / Estrés Hídrico">G2: Estrés Hídrico</option>
+                <option value="Fertilidad del Suelo (Nutrientes)">G3: Fertilidad del Suelo</option>
+                <option value="Intensidad Lumínica (PAR)">G4: Intensidad Lumínica</option>
+                <option value="Rango Térmico">G5: Rango Térmico</option>
+                <option value="Salinidad del Suelo">G6: Salinidad</option>
                 <option value="pH Edáfico">G7: pH del Suelo</option>
             </select>
         </div>
         <div>
-            <label><b>Modificar Intensidad del Factor:</b></label>
-            <input type="range" id="slider" min="0" max="100" value="50" oninput="dibujar()" style="width:100%">
+            <label><b>Variación del Factor Ambiental:</b></label><br>
+            <input type="range" id="slider" min="0" max="100" value="50" oninput="dibujar()" style="width:100%; margin-top:10px;">
         </div>
     </div>
 
-    <canvas id="canvas" width="800" height="300"></canvas>
+    <div class="alert-box" id="msgAlert"></div>
+    <canvas id="canvas" width="800" height="280"></canvas>
     
-    <div style="font-size: 0.9em; color: #555;">
-        <p><b>Análisis:</b> La especie <i>Pinus</i> muestra una curva eurioica (ancha), indicando su aptitud en diversos medios. 
-        <i>Polylepis australis</i> presenta una curva estenoica (estrecha), con límites de tolerancia estrechos asociados a condiciones de alta montaña y ambientes específicos.</p>
+    <div style="font-size: 0.9em; color: #555; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 15px;">
+        <b>Fundamento Teórico (Smith & Smith, 2007):</b>
+        <ul>
+            <li><b>Especies Eurioicas (*Pinus*):</b> Poco exigentes respecto a los valores del factor; sus valencias ecológicas registran una gran amplitud.</li>
+            <li><b>Especies Estenoicas (*Polylepis*):</b> Muy exigentes; sus límites de tolerancia son estrechos y colapsan rápidamente fuera de su óptimo[cite: 1].</li>
+        </ul>
     </div>
 </div>
 
@@ -45,39 +51,68 @@
     function dibujar() {
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const val = parseInt(document.getElementById('slider').value);
-        const factor = document.getElementById('factorSelect').value;
+        const factorVal = parseInt(document.getElementById('slider').value);
+        const factorName = document.getElementById('factorSelect').value;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Ejes
-        ctx.fillText(factor, 700, 290);
-        ctx.fillText("Supervivencia", 10, 20);
-
-        // Pinus (Verde - Eurioica)
-        ctx.strokeStyle = "#2e7d32"; ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.moveTo(50, 250);
-        ctx.bezierCurveTo(200, 50, 600, 50, 750, 250);
+        ctx.strokeStyle = "#333"; ctx.lineWidth = 2;
+        ctx.moveTo(50, 240); ctx.lineTo(750, 240); // Eje X
+        ctx.moveTo(50, 240); ctx.lineTo(50, 30);   // Eje Y
         ctx.stroke();
-        ctx.fillText("PINUS (Eurioica)", 500, 40);
 
-        // Polylepis (Rojo - Estenoica)
-        // La curva solo aparece si val está cerca de 50 (rango óptimo central)
-        if(val > 10 && val < 90) {
-            ctx.strokeStyle = "#c62828";
-            ctx.beginPath();
-            let center = (val * 7) + 50;
-            ctx.moveTo(center - 60, 250);
-            ctx.bezierCurveTo(center - 30, 80, center + 30, 80, center + 60, 250);
-            ctx.stroke();
-            ctx.fillText("POLYLEPIS (Estenoica)", center - 40, 70);
-            
-            // Esquema Polylepis
-            ctx.fillStyle = "#c62828";
-            ctx.beginPath(); ctx.arc(center, 230, 10, 0, Math.PI*2); ctx.fill();
-        } else {
-            ctx.fillText("Polylepis: Fuera de rango (No sobrevive)", 300, 150);
+        ctx.fillStyle = "#333"; ctx.font = "12px sans-serif";
+        ctx.fillText(factorName + " →", 520, 265);
+        ctx.fillText("Supervivencia / Aptitud (%)", 15, 20);
+
+        // 1. PINUS (Eurioica - Curva ancha y estable)
+        ctx.strokeStyle = "#2e7d32"; ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (let x = 50; x <= 750; x++) {
+            let norm = (x - 400) / 180; // Curva amplia
+            let y = 240 - 180 * Math.exp(-norm * norm);
+            if (x === 50) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
+        ctx.stroke();
+        ctx.fillStyle = "#2e7d32";
+        ctx.fillText("PINUS (Especie Eurioica - Amplitud amplia)[cite: 1]", 420, 40);
+
+        // 2. POLYLEPIS (Estenoica - Curva estrecha que COLAPSA en altura)
+        // El óptimo de Polylepis está cuando el slider se encuentra en el centro (50).
+        let distanciaAlOptimo = Math.abs(factorVal - 50); // de 0 a 50
+        // La altura máxima (amplitud en Y) disminuye drásticamente al alejarse del óptimo
+        let maxHeight = 190 * Math.max(0, 1 - (distanciaAlOptimo / 35));
+
+        ctx.strokeStyle = "#c62828"; ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (let x = 50; x <= 750; x++) {
+            let norm = (x - 400) / 40; // Curva muy estrecha (estenoica)
+            let y = 240 - maxHeight * Math.exp(-norm * norm);
+            if (x === 50) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        ctx.fillStyle = "#c62828";
+        ctx.fillText("POLYLEPIS (Especie Estenoica)[cite: 1]", 420, 70);
+
+        // Mensaje dinámico de colapso y esquemas visuales
+        let msg = document.getElementById('msgAlert');
+        if (maxHeight < 15) {
+            msg.innerHTML = "⚠️ ¡ATENCIÓN: La curva de Polylepis ha COLAPSADO (fuera de sus límites de tolerancia)!";
+            // Dibujar cruz de mortandad
+            ctx.strokeStyle = "#c62828"; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(395, 225); ctx.lineTo(405, 235); ctx.moveTo(405, 225); ctx.lineTo(395, 235); ctx.stroke();
+        } else {
+            msg.innerHTML = "✅ Polylepis se encuentra dentro de su óptimo ecológico.";
+            // Esquema árbol Polylepis vivo
+            ctx.fillStyle = "#c62828";
+            ctx.beginPath(); ctx.arc(400, 240 - maxHeight - 15, 12, 0, Math.PI*2); ctx.fill();
+        }
+
+        // Esquema Pinus
+        ctx.fillStyle = "#2e7d32";
+        ctx.beginPath(); ctx.moveTo(150, 210); ctx.lineTo(135, 240); ctx.lineTo(165, 240); ctx.fill();
     }
     window.onload = dibujar;
 </script>
