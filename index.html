@@ -23,17 +23,18 @@
             <label><b>Seleccionar Factor Ambiental:</b></label><br>
             <select id="factor" onchange="actualizarValoresYRedibujar()" style="width:100%; padding:8px; margin-top:5px;">
                 <option value="altitud">G1: Gradiente Altitudinal (msnm)</option>
-                <option value="temperatura">G2 & G5: Amplitud Térmica / Heladas (°C)</option>
                 <option value="precipitacion">G2: Régimen de Precipitación (mm)</option>
-                <option value="uv">G4: Radiación UV-B (W/m²)</option>
-                <option value="fuego">Frecuencia de Fuego (incendios/década)</option>
-                <option value="ph">G7: pH del Suelo (unidades de pH)</option>
-                <option value="nutrientes">G3: Fertilidad / Nitrógeno (ppm de N)</option>
+                <option value="nutrientes">G3: Fertilidad del Suelo / Nitrógeno (ppm)</option>
+                <option value="uv">G4: Intensidad Lumínica / UV-B (W/m²)</option>
+                <option value="temperatura">G5: Rango Térmico / Heladas (°C)</option>
+                <option value="salinidad">G6: Salinidad del Suelo (dS/m)</option>
+                <option value="ph">G7: pH Edáfico (unidades de pH)</option>
+                <option value="fuego">Perturbaciones / Frecuencia de Fuego (incendios/década)</option>
             </select>
         </div>
         <div>
             <label><b>Valor del Factor:</b> <span id="valLabel" style="font-weight:bold; color:#2e7d32;">70</span> <span id="unitLabel">msnm</span></label><br>
-            <input type="range" id="slider" min="0" max="100" value="70" oninput="redibujar()" style="width:100%; margin-top:10px;">
+            <input type="range" id="slider" min="0" max="100" value="75" oninput="redibujar()" style="width:100%; margin-top:10px;">
         </div>
     </div>
 
@@ -56,12 +57,13 @@
         const slider = document.getElementById('slider');
         
         if (factor === 'altitud') slider.value = 75;
-        else if (factor === 'temperatura') slider.value = 40;
         else if (factor === 'precipitacion') slider.value = 60;
+        else if (factor === 'nutrientes') slider.value = 50;
         else if (factor === 'uv') slider.value = 80;
-        else if (factor === 'fuego') slider.value = 20;
+        else if (factor === 'temperatura') slider.value = 40;
+        else if (factor === 'salinidad') slider.value = 20;
         else if (factor === 'ph') slider.value = 50;
-        else slider.value = 50;
+        else slider.value = 20;
 
         redibujar();
     }
@@ -76,12 +78,13 @@
         let valorReal = val;
         
         if (factor === 'altitud') { unidad = "msnm"; valorReal = Math.round(500 + (val / 100) * 3500); }
-        else if (factor === 'temperatura') { unidad = "°C"; valorReal = Math.round(-5 + (val / 100) * 35); }
         else if (factor === 'precipitacion') { unidad = "mm"; valorReal = Math.round(150 + (val / 100) * 1350); }
-        else if (factor === 'uv') { unidad = "W/m²"; valorReal = Math.round(50 + (val / 100) * 250); }
-        else if (factor === 'fuego') { unidad = "incendios/década"; valorReal = (val / 20).toFixed(1); }
-        else if (factor === 'ph') { unidad = "unidades de pH"; valorReal = (4.0 + (val / 100) * 4.5).toFixed(1); }
         else if (factor === 'nutrientes') { unidad = "ppm de N"; valorReal = Math.round(10 + (val / 100) * 190); }
+        else if (factor === 'uv') { unidad = "W/m²"; valorReal = Math.round(50 + (val / 100) * 250); }
+        else if (factor === 'temperatura') { unidad = "°C"; valorReal = Math.round(-5 + (val / 100) * 35); }
+        else if (factor === 'salinidad') { unidad = "dS/m"; valorReal = (0 + (val / 100) * 16).toFixed(1); }
+        else if (factor === 'ph') { unidad = "unidades de pH"; valorReal = (4.0 + (val / 100) * 4.5).toFixed(1); }
+        else if (factor === 'fuego') { unidad = "incendios/década"; valorReal = (val / 20).toFixed(1); }
 
         document.getElementById('valLabel').innerText = valorReal;
         document.getElementById('unitLabel').innerText = unidad;
@@ -118,24 +121,27 @@
         if (factor === 'altitud') {
             centroX = 620; 
             if (val < 45) { polyViable = false; razonColapso = "⚠️ Colapso: Polylepis no sobrevive en tierras bajas / valles (requiere pisos serranos de altura)."; }
-        } else if (factor === 'temperatura') {
-            centroX = 300;
-            if (val > 65) { polyViable = false; razonColapso = "⚠️ Colapso: Temperaturas elevadas superan los límites de tolerancia térmica de Polylepis."; }
         } else if (factor === 'precipitacion') {
             centroX = 500;
             if (val < 30) { polyViable = false; razonColapso = "⚠️ Colapso: Déficit hídrico extremo fuera del rango de tolerancia estacional."; }
+        } else if (factor === 'nutrientes') {
+            centroX = 450;
+            if (val < 15) { polyViable = false; razonColapso = "⚠️ Colapso: Deficiencia severa de nutrientes en el suelo."; }
         } else if (factor === 'uv') {
             centroX = 700; 
             if (val < 40) { polyViable = false; razonColapso = "⚠️ Colapso: Baja radiación UV o condiciones de sombra atípicas para su adaptación altitudinal."; }
+        } else if (factor === 'temperatura') {
+            centroX = 300;
+            if (val > 65) { polyViable = false; razonColapso = "⚠️ Colapso: Temperaturas elevadas superan los límites de tolerancia térmica de Polylepis."; }
+        } else if (factor === 'salinidad') {
+            centroX = 150;
+            if (val > 30) { polyViable = false; razonColapso = "⚠️ Colapso: Alta sensibilidad a la salinidad en suelos de montaña."; }
+        } else if (factor === 'ph') {
+            centroX = 450; // pH ligeramente ácido óptimo
+            if (val < 20 || val > 75) { polyViable = false; razonColapso = "⚠️ Colapso: Fuera del rango estricto de acidez edólogica preferida por la especie."; }
         } else if (factor === 'fuego') {
             centroX = 150; 
             if (val > 40) { polyViable = false; razonColapso = "⚠️ Colapso por Perturbación: Polylepis es altamente sensible al fuego recurrente."; }
-        } else if (factor === 'ph') {
-            centroX = 450;
-            if (val < 20 || val > 80) { polyViable = false; razonColapso = "⚠️ Colapso: Sensibilidad estricta a rangos de acidez edáfica."; }
-        } else {
-            centroX = 450;
-            if (val < 15) { polyViable = false; razonColapso = "⚠️ Colapso: Deficiencia severa de nutrientes en el suelo."; }
         }
 
         let userX = 100 + (val / 100) * 600;
