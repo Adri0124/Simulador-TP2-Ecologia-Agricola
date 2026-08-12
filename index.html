@@ -33,7 +33,7 @@
             </select>
         </div>
         <div>
-            <label><b>Valor del Factor:</b> <span id="valLabel" style="font-weight:bold; color:#2e7d32;">70</span> <span id="unitLabel">msnm</span></label><br>
+            <label><b>Valor del Factor:</b> <span id="valLabel" style="font-weight:bold; color:#2e7d32;">75</span> <span id="unitLabel">msnm</span></label><br>
             <input type="range" id="slider" min="0" max="100" value="75" oninput="redibujar()" style="width:100%; margin-top:10px;">
         </div>
     </div>
@@ -137,8 +137,8 @@
             centroX = 150;
             if (val > 30) { polyViable = false; razonColapso = "⚠️ Colapso: Alta sensibilidad a la salinidad en suelos de montaña."; }
         } else if (factor === 'ph') {
-            centroX = 450; // pH ligeramente ácido óptimo
-            if (val < 20 || val > 75) { polyViable = false; razonColapso = "⚠️ Colapso: Fuera del rango estricto de acidez edólogica preferida por la especie."; }
+            centroX = 450;
+            if (val < 20 || val > 75) { polyViable = false; razonColapso = "⚠️ Colapso: Fuera del rango estricto de acidez edafológica preferida por la especie."; }
         } else if (factor === 'fuego') {
             centroX = 150; 
             if (val > 40) { polyViable = false; razonColapso = "⚠️ Colapso por Perturbación: Polylepis es altamente sensible al fuego recurrente."; }
