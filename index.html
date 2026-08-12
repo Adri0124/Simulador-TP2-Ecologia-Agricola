@@ -2,85 +2,82 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Simulador de TP2: Valencias ecologica</title>
+    <title>Simulador de Valencias Ecológicas: Pinus vs Polylepis</title>
     <style>
-        body { font-family: sans-serif; background: #e8ece8; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #fdfdfd; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }
-        canvas { background: #fff; display: block; margin: 20px auto; border-left: 2px solid #555; border-bottom: 2px solid #555; }
-        .tag { font-weight: bold; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f4; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        canvas { background: #fafafa; border-bottom: 2px solid #555; border-left: 2px solid #555; display: block; margin: 20px auto; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Simulador Didáctico: Valencias Ecológicas</h1>
-    <div class="controls">
+    <h1>Simulador Didáctico: Valencia Ecológica</h1>
+    <div class="grid">
         <div>
-            <label class="tag">Grupo de Trabajo:</label><br>
-            <select id="grupo" onchange="dibujar()">
-                <option value="Luz (W/m²)">G1: Intensidad Lumínica</option>
+            <label><b>Seleccionar Factor por Grupo:</b></label>
+            <select id="factorSelect" onchange="dibujar()">
+                <option value="Altitud (msnm)">G1: Gradiente Altitudinal</option>
                 <option value="Precipitación (mm)">G2: Estrés Hídrico</option>
-                <option value="Nitrógeno (ppm)">G3: Fertilidad del Suelo</option>
-                <option value="Altitud (msnm)">G4: Gradiente Altitudinal</option>
-                <option value="Temp (°C)">G5: Rango Térmico</option>
+                <option value="Nutrientes (N-P-K)">G3: Fertilidad del Suelo</option>
+                <option value="Luz (W/m²)">G4: Intensidad Lumínica</option>
+                <option value="Temperatura (°C)">G5: Rango Térmico</option>
                 <option value="Salinidad (dS/m)">G6: Salinidad</option>
-                <option value="pH Edáfico">G7: Acidez del Suelo</option>
+                <option value="pH Edáfico">G7: pH del Suelo</option>
             </select>
         </div>
         <div>
-            <label class="tag">Modificar Factor:</label><br>
-            <input type="range" id="slider" min="10" max="90" value="50" oninput="dibujar()" style="width:100%">
+            <label><b>Modificar Intensidad del Factor:</b></label>
+            <input type="range" id="slider" min="0" max="100" value="50" oninput="dibujar()" style="width:100%">
         </div>
     </div>
 
-    <canvas id="grafico" width="800" height="350"></canvas>
+    <canvas id="canvas" width="800" height="300"></canvas>
     
-    <div style="text-align: center;">
-        <p><i>Análisis: La curva roja (Estenoica) muestra límites estrechos. La curva verde (Eurioica) muestra alta amplitud.[cite: 1]</i></p>
+    <div style="font-size: 0.9em; color: #555;">
+        <p><b>Análisis:</b> La especie <i>Pinus</i> muestra una curva eurioica (ancha), indicando su aptitud en diversos medios. 
+        <i>Polylepis australis</i> presenta una curva estenoica (estrecha), con límites de tolerancia estrechos asociados a condiciones de alta montaña y ambientes específicos.</p>
     </div>
 </div>
 
 <script>
     function dibujar() {
-        const canvas = document.getElementById('grafico');
+        const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const val = parseInt(document.getElementById('slider').value);
-        const factor = document.getElementById('grupo').value;
+        const factor = document.getElementById('factorSelect').value;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Dibujar Ejes
-        ctx.beginPath();
-        ctx.moveTo(50, 300); ctx.lineTo(750, 300); // Eje X
-        ctx.moveTo(50, 300); ctx.lineTo(50, 50);   // Eje Y
-        ctx.stroke();
-        ctx.fillText(factor, 700, 330);
-        ctx.fillText("Tasa de Supervivencia / Fitness", 10, 30);
+        // Ejes
+        ctx.fillText(factor, 700, 290);
+        ctx.fillText("Supervivencia", 10, 20);
 
-        // PINUS (Eurioica - Curva Ancha Verde)
+        // Pinus (Verde - Eurioica)
         ctx.strokeStyle = "#2e7d32"; ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.moveTo(50, 300);
-        ctx.bezierCurveTo(200, 50, 600, 50, 750, 300);
+        ctx.moveTo(50, 250);
+        ctx.bezierCurveTo(200, 50, 600, 50, 750, 250);
         ctx.stroke();
-        
-        // Pinus Icono
-        ctx.fillStyle = "#2e7d32";
-        ctx.beginPath(); ctx.moveTo(600, 250); ctx.lineTo(580, 280); ctx.lineTo(620, 280); ctx.fill(); // Pino
-        ctx.fillText("PINUS (Eurioica)", 570, 240);
+        ctx.fillText("PINUS (Eurioica)", 500, 40);
 
-        // POLYLEPIS (Estenoica - Curva Estrecha Roja)
-        ctx.strokeStyle = "#c62828";
-        ctx.beginPath();
-        let center = (val * 7) + 50;
-        ctx.moveTo(center - 100, 300);
-        ctx.bezierCurveTo(center - 50, 60, center + 50, 60, center + 100, 300);
-        ctx.stroke();
-
-        // Polylepis Icono
-        ctx.fillStyle = "#c62828";
-        ctx.beginPath(); ctx.arc(center, 270, 15, 0, Math.PI*2); ctx.fill(); // Polylepis
-        ctx.fillText("POLYLEPIS (Estenoica)", center - 40, 240);
+        // Polylepis (Rojo - Estenoica)
+        // La curva solo aparece si val está cerca de 50 (rango óptimo central)
+        if(val > 10 && val < 90) {
+            ctx.strokeStyle = "#c62828";
+            ctx.beginPath();
+            let center = (val * 7) + 50;
+            ctx.moveTo(center - 60, 250);
+            ctx.bezierCurveTo(center - 30, 80, center + 30, 80, center + 60, 250);
+            ctx.stroke();
+            ctx.fillText("POLYLEPIS (Estenoica)", center - 40, 70);
+            
+            // Esquema Polylepis
+            ctx.fillStyle = "#c62828";
+            ctx.beginPath(); ctx.arc(center, 230, 10, 0, Math.PI*2); ctx.fill();
+        } else {
+            ctx.fillText("Polylepis: Fuera de rango (No sobrevive)", 300, 150);
+        }
     }
     window.onload = dibujar;
 </script>
