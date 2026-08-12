@@ -27,7 +27,8 @@
                 <option value="precipitacion">G2: Régimen de Precipitación (mm)</option>
                 <option value="uv">G4: Radiación UV-B (W/m²)</option>
                 <option value="fuego">Frecuencia de Fuego (incendios/década)</option>
-                <option value="suelos">G3, G6 & G7: pH Edáfico / Fertilidad (pH / ppm)</option>
+                <option value="ph">G7: pH del Suelo (unidades de pH)</option>
+                <option value="nutrientes">G3: Fertilidad / Nitrógeno (ppm de N)</option>
             </select>
         </div>
         <div>
@@ -59,6 +60,7 @@
         else if (factor === 'precipitacion') slider.value = 60;
         else if (factor === 'uv') slider.value = 80;
         else if (factor === 'fuego') slider.value = 20;
+        else if (factor === 'ph') slider.value = 50;
         else slider.value = 50;
 
         redibujar();
@@ -70,15 +72,16 @@
         const factor = document.getElementById('factor').value;
         const val = parseInt(document.getElementById('slider').value);
         
-        // Mapeo dinámico de unidades y valores estimados reales
         let unidad = "";
         let valorReal = val;
-        if (factor === 'altitud') { unidad = "msnm"; valorReal = Math.round(val * 40); }
+        
+        if (factor === 'altitud') { unidad = "msnm"; valorReal = Math.round(500 + (val / 100) * 3500); }
         else if (factor === 'temperatura') { unidad = "°C"; valorReal = Math.round(-5 + (val / 100) * 35); }
-        else if (factor === 'precipitacion') { unidad = "mm"; valorReal = Math.round(val * 15); }
-        else if (factor === 'uv') { unidad = "W/m²"; valorReal = Math.round(val * 3); }
-        else if (factor === 'fuego') { unidad = "incendios/dec"; valorReal = Math.round(val * 0.2); }
-        else { unidad = "pH / ppm"; valorReal = (1 + (val/100)*13).toFixed(1); }
+        else if (factor === 'precipitacion') { unidad = "mm"; valorReal = Math.round(150 + (val / 100) * 1350); }
+        else if (factor === 'uv') { unidad = "W/m²"; valorReal = Math.round(50 + (val / 100) * 250); }
+        else if (factor === 'fuego') { unidad = "incendios/década"; valorReal = (val / 20).toFixed(1); }
+        else if (factor === 'ph') { unidad = "unidades de pH"; valorReal = (4.0 + (val / 100) * 4.5).toFixed(1); }
+        else if (factor === 'nutrientes') { unidad = "ppm de N"; valorReal = Math.round(10 + (val / 100) * 190); }
 
         document.getElementById('valLabel').innerText = valorReal;
         document.getElementById('unitLabel').innerText = unidad;
@@ -93,7 +96,7 @@
         ctx.stroke();
 
         ctx.fillStyle = "#333"; ctx.font = "12px sans-serif";
-        ctx.fillText("Gradiente del Factor Ambiental (" + unidad + ") →", 440, 235);
+        ctx.fillText("Gradiente del Factor Ambiental (" + unidad + ") →", 420, 235);
         ctx.fillText("Fitness / Supervivencia (%)", 15, 20);
 
         // PINUS (Eurioica - Curva ancha)
@@ -127,9 +130,12 @@
         } else if (factor === 'fuego') {
             centroX = 150; 
             if (val > 40) { polyViable = false; razonColapso = "⚠️ Colapso por Perturbación: Polylepis es altamente sensible al fuego recurrente."; }
+        } else if (factor === 'ph') {
+            centroX = 450;
+            if (val < 20 || val > 80) { polyViable = false; razonColapso = "⚠️ Colapso: Sensibilidad estricta a rangos de acidez edáfica."; }
         } else {
             centroX = 450;
-            if (val < 20 || val > 80) { polyViable = false; razonColapso = "⚠️ Colapso: Sensibilidad estricta a restricciones edáficas."; }
+            if (val < 15) { polyViable = false; razonColapso = "⚠️ Colapso: Deficiencia severa de nutrientes en el suelo."; }
         }
 
         let userX = 100 + (val / 100) * 600;
@@ -157,9 +163,6 @@
                 if (x === 50) ctx.moveTo(x, y); else ctx.lineTo(x, y);
             }
             ctx.stroke();
-        } else {
-            ctx.fillStyle = "#c62828"; ctx.font = "bold 13px sans-serif";
-            ctx.fillText("❌ POLYLEPIS: POBLACIÓN NO VIABLE / COLAPSO", 240, 110);
         }
     }
 
