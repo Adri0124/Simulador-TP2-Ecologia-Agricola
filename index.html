@@ -2,79 +2,77 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Simulador: Pinus vs Polylepis</title>
+    <title>Simulador de Grupos: Ecología Agronómica</title>
     <style>
-        body { font-family: sans-serif; background: #f0f4f0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .group-panel { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        canvas { background: #fff; border: 1px solid #ccc; display: block; margin: 10px auto; }
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        button { padding: 10px; cursor: pointer; background: #2e7d32; color: white; border: none; border-radius: 4px; }
+        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; }
+        .control-panel { background: #e0e0e0; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        canvas { background: #fff; border: 1px solid #aaa; display: block; margin: auto; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Simulador Comparativo: Adaptación al Estrés</h1>
-    
-    <div class="group-panel">
-        <label>Seleccionar Grupo (1-7): </label>
-        <select id="groupSelect">
-            <option>Grupo 1</option><option>Grupo 2</option><option>Grupo 3</option>
-            <option>Grupo 4</option><option>Grupo 5</option><option>Grupo 6</option><option>Grupo 7</option>
+    <h1>Análisis Comparativo: Grupos 1 al 7</h1>
+    <div class="control-panel">
+        <label>Grupo de Trabajo:</label>
+        <select id="grupo" onchange="actualizarEscenario()">
+            <option value="1">Grupo 1: Gradiente Altitudinal</option>
+            <option value="2">Grupo 2: Estrés Hídrico (Sequía)</option>
+            <option value="3">Grupo 3: Disponibilidad de Nutrientes</option>
+            <option value="4">Grupo 4: Intensidad Lumínica</option>
+            <option value="5">Grupo 5: Variación Térmica</option>
+            <option value="6">Grupo 6: Salinidad del Suelo</option>
+            <option value="7">Grupo 7: pH del Suelo</option>
         </select>
-        <button onclick="dibujarComparativa()">Registrar Grupo y Dibujar</button>
+        <p><small id="mision">Seleccione un grupo para ver su misión.</small></p>
+        <label>Modificar Intensidad del Factor Ambiental:</label>
+        <input type="range" id="factorInput" min="0" max="100" value="50" oninput="dibujar()">
     </div>
-
-    <div id="info" style="text-align: center; font-weight: bold; margin-bottom: 10px;"></div>
-    <canvas id="ecoCanvas" width="800" height="300"></canvas>
-    
-    <div style="font-size: 0.9em; margin-top: 20px; padding: 10px; background: #fffde7;">
-        <b>Análisis Bibliográfico (Smith & Smith, 2007):</b>
-        <ul>
-            <li><b>Pinus:</b> Alta plasticidad, colonizador, alta tasa de crecimiento si los recursos son abundantes, pero requiere inversión constante.</li>
-            <li><b>Polylepis:</b> Estratega de ambientes extremos, alta inversión en raíces, baja tasa fotosintética pero gran resiliencia frente a factores limitantes.</li>
-        </ul>
-    </div>
+    <canvas id="grafico" width="800" height="300"></canvas>
+    <p><i>Nota: La curva estrecha (roja) es Polylepis. La curva ancha (verde) es Pinus.</i></p>
 </div>
 
 <script>
-    function dibujarComparativa() {
-        const canvas = document.getElementById('ecoCanvas');
-        const ctx = canvas.getContext('2d');
-        const grp = document.getElementById('groupSelect').value;
-        document.getElementById('info').innerText = "Simulación: " + grp + " - Comparativa de Inversión de Biomasa ante Estrés";
+    const misiones = {
+        "1": "Analicen la supervivencia de Polylepis en la cumbre vs. Pinus en el valle.",
+        "2": "Simulen una sequía prolongada: ¿Cuándo el Polylepis pierde su viabilidad?",
+        "3": "Evalúen la respuesta ante suelos pobres (baja fertilidad).",
+        "4": "Comparen la eficiencia fotosintética según la insolación.",
+        "5": "Analicen el límite de tolerancia térmica (Shelford).",
+        "6": "Evalúen el efecto del aumento de sales sobre las raíces.",
+        "7": "Simulen el efecto del pH en la disponibilidad de nutrientes."
+    };
 
-        // Limpiar
+    function actualizarEscenario() {
+        const g = document.getElementById("grupo").value;
+        document.getElementById("mision").innerText = "Misión: " + misiones[g];
+        dibujar();
+    }
+
+    function dibujar() {
+        const canvas = document.getElementById('grafico');
+        const ctx = canvas.getContext('2d');
+        const val = parseInt(document.getElementById('factorInput').value);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Dibujar PINO (Estrategia flexible)
-        ctx.fillStyle = "#1b5e20"; // Verde oscuro
-        ctx.fillRect(150, 100, 100, 150); // Tronco
-        ctx.fillStyle = "#81c784";
-        ctx.beginPath(); ctx.moveTo(200, 20); ctx.lineTo(100, 100); ctx.lineTo(300, 100); ctx.fill(); // Copa
-        ctx.fillStyle = "#a1887f";
-        ctx.fillRect(180, 250, 40, 30); // Raíz moderada
+        // Curva Eurioica (Pino) - Siempre presente, rango ancho
+        ctx.strokeStyle = "green"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(50, 250);
+        ctx.bezierCurveTo(200, 50, 600, 50, 750, 250); ctx.stroke();
 
-        // Dibujar POLYLEPIS (Estrategia conservativa/radical)
-        ctx.fillStyle = "#4e342e"; // Marrón
-        ctx.fillRect(550, 100, 80, 100); // Tronco corto
-        ctx.fillStyle = "#558b2f";
-        ctx.beginPath(); ctx.arc(590, 80, 50, 0, Math.PI * 2); ctx.fill(); // Copa densa
-        ctx.fillStyle = "#8d6e63";
-        ctx.fillRect(500, 200, 180, 60); // Raíz muy extendida (Adaptación)
+        // Curva Estenoica (Polylepis) - Se desplaza según el control (Input)
+        ctx.strokeStyle = "red";
+        ctx.beginPath();
+        let offset = val * 6; // El input desplaza la curva
+        ctx.moveTo(offset, 250);
+        ctx.bezierCurveTo(offset + 50, 50, offset + 150, 50, offset + 200, 250);
+        ctx.stroke();
 
-        // Textos
         ctx.fillStyle = "black";
-        ctx.font = "16px Arial";
-        ctx.fillText("PINUS (Valencia amplia)", 120, 290);
-        ctx.fillText("POLYLEPIS (Valencia estenoica/adaptada)", 480, 290);
-        
-        ctx.font = "12px Arial";
-        ctx.fillText("Alta inversión foliar", 140, 60);
-        ctx.fillText("Alta inversión en Raíz (exploración)", 520, 240);
+        ctx.fillText("Valencia Ecológica (Respuesta del grupo " + document.getElementById("grupo").value + ")", 10, 20);
     }
+    window.onload = actualizarEscenario;
 </script>
-
 </body>
 </html>
