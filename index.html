@@ -6,9 +6,10 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f0; padding: 20px; }
         .container { max-width: 950px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #e8f5e9; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        canvas { background: #fff; border-bottom: 2px solid #333; border-left: 2px solid #333; display: block; margin: 15px auto; }
-        .alert { color: #c62828; font-weight: bold; text-align: center; height: 24px; font-size: 14px; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #e8f5e9; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
+        canvas { background: #fff; border-bottom: 2px solid #333; border-left: 2px solid #333; display: block; margin: 15px auto 5px auto; }
+        .alert { color: #c62828; font-weight: bold; text-align: center; height: 24px; font-size: 14px; margin-bottom: 10px; }
+        .legend { display: flex; justify-content: center; gap: 40px; margin-bottom: 15px; font-size: 14px; font-weight: bold; }
         .info-text { font-size: 0.85em; color: #444; background: #f9f9f9; padding: 12px; border-radius: 6px; margin-top: 15px; }
     </style>
 </head>
@@ -16,31 +17,35 @@
 
 <div class="container">
     <h2>Simulador de Valencia Ecológica: <i>Pinus</i> vs <i>Polylepis australis</i></h2>
-    <p><small>Basado en los conceptos de Smith & Smith (2007) y TP Nº 2[cite: 1]</small></p>
     
     <div class="controls">
         <div>
-            <label><b>Seleccionar Factor Ambiental (Grupos):</b></label><br>
+            <label><b>Seleccionar Factor Ambiental:</b></label><br>
             <select id="factor" onchange="actualizarValoresYRedibujar()" style="width:100%; padding:8px; margin-top:5px;">
-                <option value="altitud">G1: Gradiente Altitudinal (Valles vs Altura)</option>
-                <option value="temperatura">G2 & G5: Amplitud Térmica / Heladas</option>
-                <option value="precipitacion">G2: Régimen de Precipitación (Estacional)</option>
-                <option value="uv">G4: Radiación UV-B en Altura</option>
-                <option value="fuego">Perturbaciones / Frecuencia de Fuego</option>
-                <option value="suelos">G3, G6 & G7: Fertilidad y pH Edáfico</option>
+                <option value="altitud">G1: Gradiente Altitudinal (msnm)</option>
+                <option value="temperatura">G2 & G5: Amplitud Térmica / Heladas (°C)</option>
+                <option value="precipitacion">G2: Régimen de Precipitación (mm)</option>
+                <option value="uv">G4: Radiación UV-B (W/m²)</option>
+                <option value="fuego">Frecuencia de Fuego (incendios/década)</option>
+                <option value="suelos">G3, G6 & G7: pH Edáfico / Fertilidad (pH / ppm)</option>
             </select>
         </div>
         <div>
-            <label><b>Intensidad del Factor:</b> <span id="valLabel" style="font-weight:bold; color:#2e7d32;">70</span></label><br>
+            <label><b>Valor del Factor:</b> <span id="valLabel" style="font-weight:bold; color:#2e7d32;">70</span> <span id="unitLabel">msnm</span></label><br>
             <input type="range" id="slider" min="0" max="100" value="70" oninput="redibujar()" style="width:100%; margin-top:10px;">
         </div>
     </div>
 
+    <div class="legend">
+        <span style="color: #2e7d32;">― PINUS (Eurioica / Generalista)</span>
+        <span style="color: #c62828;">― POLYLEPIS AUSTRALIS (Estenoica / Especialista)</span>
+    </div>
+
     <div class="alert" id="estadoAlerta"></div>
-    <canvas id="grafico" width="800" height="280"></canvas>
+    <canvas id="grafico" width="800" height="260"></canvas>
     
     <div class="info-text" id="infoContexto">
-        <b>Análisis de Nicho:</b> Las especies eurioicas (*Pinus*) presentan curvas anchas que denotan baja exigencia y amplia distribución[cite: 1]. Las especies estenoicas (*Polylepis*) muestran curvas estrechas y vulnerabilidad al colapso fuera de su óptimo de alta montaña[cite: 1].
+        <b>Análisis didáctico:</b> Las especies eurioicas presentan curvas amplias con alta tolerancia a la variación ambiental, mientras que las estenoicas muestran rangos estrictos y colapsan fuera de su óptimo ecológico.
     </div>
 </div>
 
@@ -65,33 +70,43 @@
         const factor = document.getElementById('factor').value;
         const val = parseInt(document.getElementById('slider').value);
         
-        document.getElementById('valLabel').innerText = val;
+        // Mapeo dinámico de unidades y valores estimados reales
+        let unidad = "";
+        let valorReal = val;
+        if (factor === 'altitud') { unidad = "msnm"; valorReal = Math.round(val * 40); }
+        else if (factor === 'temperatura') { unidad = "°C"; valorReal = Math.round(-5 + (val / 100) * 35); }
+        else if (factor === 'precipitacion') { unidad = "mm"; valorReal = Math.round(val * 15); }
+        else if (factor === 'uv') { unidad = "W/m²"; valorReal = Math.round(val * 3); }
+        else if (factor === 'fuego') { unidad = "incendios/dec"; valorReal = Math.round(val * 0.2); }
+        else { unidad = "pH / ppm"; valorReal = (1 + (val/100)*13).toFixed(1); }
+
+        document.getElementById('valLabel').innerText = valorReal;
+        document.getElementById('unitLabel').innerText = unidad;
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Ejes
+        // Dibujar Ejes
         ctx.beginPath();
         ctx.strokeStyle = "#444"; ctx.lineWidth = 2;
-        ctx.moveTo(50, 230); ctx.lineTo(750, 230); 
-        ctx.moveTo(50, 230); ctx.lineTo(50, 30);   
+        ctx.moveTo(50, 210); ctx.lineTo(750, 210); 
+        ctx.moveTo(50, 210); ctx.lineTo(50, 30);   
         ctx.stroke();
 
         ctx.fillStyle = "#333"; ctx.font = "12px sans-serif";
-        ctx.fillText("Gradiente del Factor Ambiental →", 510, 255);
+        ctx.fillText("Gradiente del Factor Ambiental (" + unidad + ") →", 440, 235);
         ctx.fillText("Fitness / Supervivencia (%)", 15, 20);
 
-        // PINUS (Eurioica - Ancha y estable en casi todo el espectro)
+        // PINUS (Eurioica - Curva ancha)
         ctx.strokeStyle = "#2e7d32"; ctx.lineWidth = 3;
         ctx.beginPath();
         for (let x = 50; x <= 750; x++) {
             let norm = (x - 400) / 190;
-            let y = 230 - 170 * Math.exp(-norm * norm);
+            let y = 210 - 150 * Math.exp(-norm * norm);
             if (x === 50) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
         ctx.stroke();
-        ctx.fillStyle = "#2e7d32";
-        ctx.fillText("PINUS (Especie Eurioica / Generalista)[cite: 1]", 400, 35);
 
-        // POLYLEPIS (Estenoica - Respuesta específica según variable)
+        // POLYLEPIS (Estenoica)
         let polyViable = true;
         let razonColapso = "";
         let centroX = 550; 
@@ -99,19 +114,19 @@
 
         if (factor === 'altitud') {
             centroX = 620; 
-            if (val < 45) { polyViable = false; razonColapso = "⚠️ Colapso: Polylepis no sobrevive en tierras bajas / valles (requiere pisos serranos)[cite: 1]."; }
+            if (val < 45) { polyViable = false; razonColapso = "⚠️ Colapso: Polylepis no sobrevive en tierras bajas / valles (requiere pisos serranos de altura)."; }
         } else if (factor === 'temperatura') {
             centroX = 300;
-            if (val > 65) { polyViable = false; razonColapso = "⚠️ Colapso: Temperaturas elevadas superan los límites de tolerancia térmica de Polylepis[cite: 1]."; }
+            if (val > 65) { polyViable = false; razonColapso = "⚠️ Colapso: Temperaturas elevadas superan los límites de tolerancia térmica de Polylepis."; }
         } else if (factor === 'precipitacion') {
             centroX = 500;
             if (val < 30) { polyViable = false; razonColapso = "⚠️ Colapso: Déficit hídrico extremo fuera del rango de tolerancia estacional."; }
         } else if (factor === 'uv') {
-            centroX = 700; // Alta radiación UV en altura
+            centroX = 700; 
             if (val < 40) { polyViable = false; razonColapso = "⚠️ Colapso: Baja radiación UV o condiciones de sombra atípicas para su adaptación altitudinal."; }
         } else if (factor === 'fuego') {
-            centroX = 150; // Sensible al fuego frecuente
-            if (val > 40) { polyViable = false; razonColapso = "⚠️ Colapso por Perturbación: Polylepis es altamente sensible y carece de rápida recuperación al fuego recurrente."; }
+            centroX = 150; 
+            if (val > 40) { polyViable = false; razonColapso = "⚠️ Colapso por Perturbación: Polylepis es altamente sensible al fuego recurrente."; }
         } else {
             centroX = 450;
             if (val < 20 || val > 80) { polyViable = false; razonColapso = "⚠️ Colapso: Sensibilidad estricta a restricciones edáficas."; }
@@ -123,11 +138,11 @@
         if (polyViable) {
             let distanciaAlOptimo = Math.abs(userX - centroX);
             let factorAtenuacion = Math.max(0, 1 - (distanciaAlOptimo / 170));
-            maxHeight = 180 * factorAtenuacion;
+            maxHeight = 150 * factorAtenuacion;
             
             if (maxHeight < 20) {
                 polyViable = false;
-                razonColapso = "⚠️ Fuera del óptimo ecológico: la especie sobrevive con estrés severo[cite: 1].";
+                razonColapso = "⚠️ Fuera del óptimo ecológico: la especie sobrevive con estrés severo.";
             }
         }
 
@@ -138,15 +153,13 @@
             ctx.beginPath();
             for (let x = 50; x <= 750; x++) {
                 let norm = (x - centroX) / anchoEstenoico; 
-                let y = 230 - maxHeight * Math.exp(-norm * norm);
+                let y = 210 - maxHeight * Math.exp(-norm * norm);
                 if (x === 50) ctx.moveTo(x, y); else ctx.lineTo(x, y);
             }
             ctx.stroke();
-            ctx.fillStyle = "#c62828";
-            ctx.fillText("POLYLEPIS (Especie Estenoica / Especialista)[cite: 1]", centroX - 110, 65);
         } else {
             ctx.fillStyle = "#c62828"; ctx.font = "bold 13px sans-serif";
-            ctx.fillText("❌ POLYLEPIS: POBLACIÓN NO VIABLE / COLAPSO", 240, 130);
+            ctx.fillText("❌ POLYLEPIS: POBLACIÓN NO VIABLE / COLAPSO", 240, 110);
         }
     }
 
